@@ -68,9 +68,10 @@ jobs:
               "mkdir -p /home/ubuntu/servicestation-Frontend",
               "aws s3 cp s3://demo-bucket-16-06/deploy.zip /home/ubuntu/deploy.zip",
               "unzip -o /home/ubuntu/deploy.zip -d /home/ubuntu/servicestation-Frontend",
-              "cd /home/ubuntu/servicestation-Frontend && pm2 delete servicestation-frontend || true",
-              "cd /home/ubuntu/servicestation-Frontend && pm2 start npm --name servicestation-frontend -- start",
+              "cd /home/ubuntu/servicestation-Frontend",
+              "npm install",
+              "npm run build || true",
+              "pm2 delete servicestation-frontend || true",
+              "pm2 start npm --name servicestation-frontend -- start",
               "pm2 save",
               "rm /home/ubuntu/deploy.zip"
-            ]' \
-            --region "$AWS_REGION"
