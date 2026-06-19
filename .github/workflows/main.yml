@@ -1,0 +1,76 @@
+name: Deploy Frontend to EC2
+
+on:
+  push:
+    branches:
+      - dev
+
+permissions:
+  id-token: write    # ADDED - required for OIDC
+  contents: read
+
+env:
+  AWS_REGION: ap-south-1
+  EC2_INSTANCE_ID: i-0400a5313241c1c29
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout - NO CHANGE
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Setup Node - NO CHANGE
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      # 3. Install deps - NO CHANGE
+      - name: Install dependencies
+        run: npm ci
+
+      # 4. Build app - NO CHANGE
+      - name: Build app
+        run: npm run build
+        env:
+          NODE_ENV: production
+          NODE_OPTIONS: "--max-old-space-size=6144"
+
+      # 5. ADDED - AWS auth via OIDC (replaces secrets EC2_HOST, EC2_USER, EC2_SSH_KEY)
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::YOUR_ACCOUNT_ID:role/OIDC-ROLE
+          aws-region: ${{ env.AWS_REGION }}
+
+      # 6. ADDED - zip build output to upload via SSM (replaces scp-action)
+      - name: Zip build artifacts
+        run: |
+          zip -r deploy.zip .next public package.json package-lock.json node_modules ecosystem.config.js
+
+      # 7. ADDED - upload zip to S3 (SSM can't transfer files directly, needs S3)
+      - name: Upload to S3
+        run: |
+          aws s3 cp deploy.zip s3://demo-bucket-16-06/deploy.zip
+
+      # 8. CHANGED - replaces all 3 appleboy steps (clean + scp + start)
+      - name: Deploy via SSM
+        run: |
+          aws ssm send-command \
+            --instance-ids "$EC2_INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --parameters commands='[
+              "rm -rf /home/ubuntu/servicestation-Frontend/*",
+              "mkdir -p /home/ubuntu/servicestation-Frontend",
+              "aws s3 cp s3://demo-bucket-16-06/deploy.zip /home/ubuntu/deploy.zip",
+              "unzip -o /home/ubuntu/deploy.zip -d /home/ubuntu/servicestation-Frontend",
+              "cd /home/ubuntu/servicestation-Frontend && pm2 delete servicestation-frontend || true",
+              "cd /home/ubuntu/servicestation-Frontend && pm2 start npm --name servicestation-frontend -- start",
+              "pm2 save",
+              "rm /home/ubuntu/deploy.zip"
+            ]' \
+            --region "$AWS_REGION"
