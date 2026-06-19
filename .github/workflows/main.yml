@@ -3,7 +3,7 @@ name: Deploy Frontend to EC2
 on:
   push:
     branches:
-      - dev
+      - main
 
 permissions:
   id-token: write    # ADDED - required for OIDC
