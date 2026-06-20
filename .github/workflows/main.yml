@@ -53,6 +53,10 @@ jobs:
           zip -r deploy.zip .next public package.json package-lock.json node_modules ecosystem.config.js
 
       # 7. ADDED - upload zip to S3 (SSM can't transfer files directly, needs S3)
+      - name: Upload to S3
+        run: |
+          aws s3 cp deploy.zip s3://bucket-zip-s3/deploy.zip
+
       - name: Deploy via SSM
         run: |
           aws ssm send-command \
