@@ -68,8 +68,8 @@ jobs:
             "/usr/bin/aws s3 cp s3://bucket-zip-s3/deploy.zip /home/ubuntu/deploy.zip",
             "/usr/bin/unzip -o /home/ubuntu/deploy.zip -d /home/ubuntu/servicestation-Frontend",
             "cd /home/ubuntu/servicestation-Frontend && npm ci",
-            "cd /home/ubuntu/servicestation-Frontend && pm2 delete servicestation-frontend || true",
-            "cd /home/ubuntu/servicestation-Frontend && pm2 start npm --name servicestation-frontend -- start",
+            "cd /home/ubuntu/servicestation-Frontend && pm2 delete servicestation-Frontend || true",
+            "cd /home/ubuntu/servicestation-Frontend && pm2 start npm --name servicestation-Frontend -- start",
             "pm2 save",
             "rm -f /home/ubuntu/deploy.zip"
           ]'\
