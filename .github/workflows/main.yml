@@ -53,11 +53,6 @@ jobs:
           zip -r deploy.zip .next public package.json package-lock.json node_modules ecosystem.config.js
 
       # 7. ADDED - upload zip to S3 (SSM can't transfer files directly, needs S3)
-      - name: Upload to S3
-        run: |
-          aws s3 cp deploy.zip s3://demo-bucket-16-06/deploy.zip
-
-      # 8. CHANGED - replaces all 3 appleboy steps (clean + scp + start)
       - name: Deploy via SSM
         run: |
           aws ssm send-command \
@@ -66,12 +61,11 @@ jobs:
             --parameters commands='[
               "rm -rf /home/ubuntu/servicestation-Frontend/*",
               "mkdir -p /home/ubuntu/servicestation-Frontend",
-              "aws s3 cp s3://demo-bucket-16-06/deploy.zip /home/ubuntu/deploy.zip",
+              "aws s3 cp s3://bucket-zip-s3/deploy.zip /home/ubuntu/deploy.zip",
               "unzip -o /home/ubuntu/deploy.zip -d /home/ubuntu/servicestation-Frontend",
-              "cd /home/ubuntu/servicestation-Frontend",
-              "npm install",
-              "npm run build || true",
-              "pm2 delete servicestation-frontend || true",
-              "pm2 start npm --name servicestation-frontend -- start",
+              "cd /home/ubuntu/servicestation-Frontend && pm2 delete servicestation-frontend || true",
+              "cd /home/ubuntu/servicestation-Frontend && pm2 start npm --name servicestation-frontend -- start",
               "pm2 save",
               "rm /home/ubuntu/deploy.zip"
+            ]' \
+            --region "$AWS_REGION"
