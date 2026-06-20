@@ -63,13 +63,13 @@ jobs:
             --instance-ids "$EC2_INSTANCE_ID" \
             --document-name "AWS-RunShellScript" \
             --parameters commands='[
-              "rm -rf /home/ubuntu/servicestation-Frontend/*",
-              "mkdir -p /home/ubuntu/servicestation-Frontend",
-              "aws s3 cp s3://bucket-zip-s3/deploy.zip /home/ubuntu/deploy.zip",
-              "unzip -o /home/ubuntu/deploy.zip -d /home/ubuntu/servicestation-Frontend",
-              "cd /home/ubuntu/servicestation-Frontend && pm2 delete servicestation-frontend || true",
-              "cd /home/ubuntu/servicestation-Frontend && pm2 start npm --name servicestation-frontend -- start",
-              "pm2 save",
-              "rm /home/ubuntu/deploy.zip"
-            ]' \
+            "rm -rf /home/ubuntu/servicestation-Frontend/*",
+            "mkdir -p /home/ubuntu/servicestation-Frontend",
+            "/usr/bin/aws s3 cp s3://bucket-zip-s3/deploy.zip /home/ubuntu/deploy.zip",
+            "/usr/bin/unzip -o /home/ubuntu/deploy.zip -d /home/ubuntu/servicestation-Frontend",
+            "cd /home/ubuntu/servicestation-Frontend && pm2 delete servicestation-frontend || true",
+            "cd /home/ubuntu/servicestation-Frontend && pm2 start npm --name servicestation-frontend -- start",
+            "pm2 save",
+            "rm -f /home/ubuntu/deploy.zip"
+          ]'\
             --region "$AWS_REGION"
